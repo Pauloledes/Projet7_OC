@@ -106,7 +106,7 @@ with st.spinner('Chargement des données clients'):
     train = get_data('csv_files/vue_generale_train.csv')
 
 with st.spinner('Chargement du modèle'):
-    model = get_best_model('LGBM_model.pkl')
+    model = get_best_model('notebooks/LGBM_model.pkl')
 
 with st.spinner('Chargement des prédictions'):
     predictions = get_data('csv_files/submission.csv')
@@ -326,7 +326,7 @@ with st.expander("Plus d'informations"):
     st.pyplot(fig)
 
 with st.expander('Comment améliorer ce score ?'):
-    best_model = get_best_model(filename="LGBM_model.pkl")
+    best_model = model#get_best_model(filename="LGBM_model.pkl")
     col1, col2 = st.columns([6, 10])
 
     with col1:
