@@ -2,9 +2,10 @@ import pandas as pd
 import numpy as np
 from lime import lime_tabular
 from matplotlib import pyplot as plt
+from sklearn.impute import SimpleImputer
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, fbeta_score
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 from imblearn.under_sampling import RandomUnderSampler
 import seaborn as sns
 
@@ -17,16 +18,16 @@ def get_scores(test_labels, preds):
     print('FB: %.3f' % fbeta_score(test_labels.values, preds, beta=3), '\n')
 
 
-def under_sampling(df, target_name):
+def under_sampling(df, target_name:str):
     X_train = df.drop(columns=target_name)
-    y_train = df['TARGET']
+    y_train = df[target_name]
 
     rus = RandomUnderSampler(random_state=0)
 
     X_resampled, y_resampled = rus.fit_resample(X_train, y_train)
 
     df_resampled = X_resampled.copy()
-    df_resampled['TARGET'] = y_resampled
+    df_resampled[target_name] = y_resampled
 
     return df_resampled
 
@@ -108,7 +109,7 @@ def LIME_test(model, features, target, features_names, idx):
 
 
 # Defining a function to plot KDE plots
-def plot_kde(df, col, reverse_scale=False):
+def plot_kde(df, col, target, reverse_scale=False):
     plt.figure(figsize=(12, 6))
 
     if reverse_scale:
@@ -117,13 +118,84 @@ def plot_kde(df, col, reverse_scale=False):
         r = 1
 
     # KDE of paid loans (target == 0)
-    sns.kdeplot(df.loc[df['TARGET'] == 0, col] * r, label='Target: 0', color='green', shade=True)
+    sns.kdeplot(df.loc[df[target] == 0, col] * r, label=f'{target}: 0', color='green', shade=True)
 
     # KDE of defaults (target == 1)
-    sns.kdeplot(df.loc[df['TARGET'] == 1, col] * r, label='Target: 1', color='purple', shade=True)
+    sns.kdeplot(df.loc[df[target] == 1, col] * r, label=f'{target}: 1', color='purple', shade=True)
 
-    plt.xlabel('{}'.format(col));
-    plt.ylabel('KDE');
-    plt.title('KDE for column {}'.format(col));
+    plt.xlabel('{}'.format(col))
+    plt.ylabel('KDE')
+    plt.title('KDE for column {}'.format(col))
     plt.show()
     plt.close()
+
+
+def prepare_test(X_train, X_test, do_anom=False):
+    # Instantiate a label encoder
+    label_encode = LabelEncoder()
+    # Iterate over columns
+    for col in X_train:
+        if X_train[col].dtype == 'object':
+            # If 2 or fewer unique categories
+            if len(list(X_train[col].unique())) <= 2:
+                label_encode.fit(X_train[col])
+                # apply the transformation to both train and test sets
+                X_train[col] = label_encode.transform(X_train[col])
+                X_test[col] = label_encode.transform(X_test[col])
+
+    # one-hot encode the multiclass categoricals
+    X_train = pd.get_dummies(X_train)
+    X_test = pd.get_dummies(X_test)
+    X_train_labels = X_train['TARGET']
+
+    # align the training and testing data, keep only columns present in both dataframes
+    X_train, X_test = X_train.align(X_test, join='inner', axis=1)
+
+    # add the target back in
+    X_train['TARGET'] = X_train_labels
+
+    if do_anom:
+        X_train['DAYS_EMPLOYED_ANOM'] = X_train["DAYS_EMPLOYED"] == 365243
+        X_test['DAYS_EMPLOYED_ANOM'] = X_test["DAYS_EMPLOYED"] == 365243
+
+        # Replace the anomalous values with nan
+        X_train['DAYS_EMPLOYED'].replace({365243: np.nan}, inplace=True)
+        X_test['DAYS_EMPLOYED'].replace({365243: np.nan}, inplace=True)
+
+        X_train.drop(columns='DAYS_EMPLOYED_ANOM', inplace=True)
+        X_test.drop(columns='DAYS_EMPLOYED_ANOM', inplace=True)
+
+    return X_train, X_test
+
+
+def reduced_var_imputer(X_train, X_test):
+    correlations = X_train.corr()['TARGET'].sort_values()
+    corr_pos = list(correlations.sort_values(ascending=False).head(16).index)
+    corr_neg = list(correlations.sort_values(ascending=True).head(16).index)
+    corr = corr_pos + corr_neg
+
+    df= X_train[corr]
+    # create X_train, y_train
+    X_train = df.drop('TARGET', axis=1)
+    X_test = X_test[corr[1:]]
+    # Feature names
+    features_list = list(X_train.columns)
+    X_test = X_test[corr[1:]]
+    imputer = SimpleImputer(strategy='median')
+
+    # Scale all values in 0-1 range
+    scaler = MinMaxScaler(feature_range=(0, 1))
+
+    # fit the imputer on training set
+    imputer.fit(X_train)
+
+    # transform both training and testing data
+    X_train = imputer.transform(X_train)
+    X_test = imputer.transform(X_test)
+
+    # fit scaler and transform
+    scaler.fit(X_train)
+    train = scaler.transform(X_train)
+    test = scaler.transform(X_test)
+
+    return train, test
