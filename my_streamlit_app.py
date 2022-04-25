@@ -5,10 +5,13 @@ import numpy as np
 import altair
 import streamlit as st
 import pandas as pd
+from pandas.errors import IntCastingNaNError
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
 import warnings
 from my_functions import functions
+from PIL import Image
+from streamlit_echarts import st_echarts
 
 warnings.filterwarnings("ignore")
 
@@ -17,15 +20,15 @@ st.set_option('deprecation.showPyplotGlobalUse', False)
 
 @st.cache(allow_output_mutation=True)
 def get_data(filename):
-    df = pd.read_csv(filename)
+    data = pd.read_csv(filename)
 
     try:
-        df.drop(columns=['Unnamed: 0'], inplace=True)
+        data.drop(columns=['Unnamed: 0'], inplace=True)
 
     except KeyError:
         pass
 
-    return df
+    return data
 
 
 @st.cache(allow_output_mutation=True)
@@ -75,7 +78,7 @@ def train_nn(df_train, cols, n_neighbors=4):
 my_nn, df_nn, std = train_nn(original_train, cols=columns_test)
 
 
-def get_kneighbors(df_test, df_train, trained_model, cols, ID_client):
+def get_kneighbors(df_test, df_train, trained_model, cols, ID_client, n_neighbors=50):
     # Collecting index of requested ID_client
     my_index = df_test[cols][df_test[cols]['SK_ID_CURR'] == ID_client].index[0]
 
@@ -83,7 +86,7 @@ def get_kneighbors(df_test, df_train, trained_model, cols, ID_client):
     client_list = std.transform(df_test[cols])
 
     # Prediction
-    distance, voisins = trained_model.kneighbors([client_list[my_index]], n_neighbors=50)
+    distance, voisins = trained_model.kneighbors([client_list[my_index]], n_neighbors=n_neighbors)
     voisins = voisins[0]
 
     voisins_table = pd.DataFrame()
@@ -96,38 +99,44 @@ def get_kneighbors(df_test, df_train, trained_model, cols, ID_client):
 
 with header:
     st.title("Dashboard interactif")
-    st.text("Ce dashboard a pour but d'aider les chargés de relation client afin qu'ils puissent à la fois "
-            "expliquer de façon la plus transparente possible les décisions d’octroi de crédit, "
-            "mais également permettre à leurs\n"
-            "clients de disposer de leurs informations personnelles et de les explorer facilement. \n")
+
+    col1, col2 = st.columns([10, 1])
+
+    col1.text("Ce dashboard a pour but d'aider les chargés de relation client afin qu'ils puissent à la fois "
+              "expliquer de façon la plus transparente possible les décisions d’octroi de crédit, "
+              "mais également permettre à leurs\n"
+              "clients de disposer de leurs informations personnelles et de les explorer facilement. \n")
+    col1.text("Dans le cas où la prédiction de remboursement est inférieure à 60 %, une tentative d\'amélioration \n"
+              "de ce dernier est proposée.")
+
+    image_name = 'logo.png'
+    image = Image.open(image_name)
+
+    col2.image(image_name)
 
 with st.spinner('Chargement des données clients'):
     test = get_data('csv_files/vue_generale_test.csv')
     train = get_data('csv_files/vue_generale_train.csv')
 
 with st.spinner('Chargement du modèle'):
-    model = get_best_model('notebooks/LGBM_model.pkl')
+    model = get_best_model('models/LGBM_model.pkl')
 
 with st.spinner('Chargement des prédictions'):
     predictions = get_data('csv_files/submission.csv')
 
-my_col, _ = st.columns([6, 10])
+col1, col2 = st.columns([6, 10])
 
-with my_col:
+with col1:
     st.markdown("Merci d'entrer un identifiant client :")
     identifiant = st.selectbox(label='', options=test['Id_client'])
     df_id = predictions.loc[predictions['ID'] == identifiant]
     df_client = test.loc[test['Id_client'] == identifiant]
-
-col1, col2 = st.columns([6, 10])
-
-with col1:
     st.text('Prédictions de remboursement')
     st.dataframe(df_id)
     # st.dataframe(original_test)
     # original_id = original_test[original_test[]]
-    value = np.round(df_id['Prediction'].iloc[0], 3)
-    percent = value * 100
+    value = np.round(df_id['Prediction'].iloc[0], 2)
+    percent = int(value * 100)
     st.text(f"Ce client a {percent} % de chances de rembourser")
 
     if percent >= 50:
@@ -137,43 +146,129 @@ with col1:
         st.write("Prêt refusé ! ❌")
 
     st.markdown(f'Position du client {identifiant} dans la base des nouveaux clients')
+    st.empty()
+    #
+    #
+    # def pos_client(prediction, id):
+    #     fig = plt.figure()
+    #     ax = prediction['Prediction'].hist(grid=False)
+    #
+    #     for bar in ax.containers[0]:
+    #         # get x midpoint of bar
+    #         x = bar.get_x() + 0.5 * bar.get_width()
+    #
+    #         # set bar color based on x
+    #         if x < 0.4:
+    #             bar.set_color('red')
+    #         elif 0.4 <= x <= 0.6:
+    #             bar.set_color('yellow')
+    #         else:
+    #             bar.set_color('green')
+    #
+    #     return fig
+    #
+    #
+    # fig = pos_client(predictions, df_id)
+    # lim = plt.gca().get_ylim()
+    # plt.vlines(df_id['Prediction'].iloc[0],
+    #            lim[0],
+    #            lim[1],
+    #            colors='blue',
+    #            label=f'Notre client \n Score : {value}')
+    # plt.legend()
+    #
+    # st.pyplot(fig)
 
+    def set_echarts(value):
+        option = {"series": [
+                {
+                    "name": "Probabilités de remboursement",
+                    "type": 'gauge',
+                    'axisLine': {
+                        'lineStyle': {
+                            'width': 10,
+                            'color': [
+                                [0.39, 'red'],
+                                [0.6, 'yellow'],
+                                [1, 'green']
+                            ]
+                        }
+                    },
+                    'pointer': {
+                        'itemStyle': {
+                            'color': 'auto'
+                        }
+                    },
+                    'axisTick': {
+                        'distance': -10,
+                        'length': 0,
+                        'lineStyle': {
+                            'color': '#fff',
+                            'width': 4
+                        }
+                    },
+                    'splitLine': {
+                        'distance': -70,
+                        'length': 0,
+                        'lineStyle': {
+                            'color': '#fff',
+                            'width': 4
+                        }
+                    },
+                    'axisLabel': {
+                        'color': 'auto',
+                        'distance': 40,
+                        'fontSize': 20
+                    },
+                    'detail': {
+                        'valueAnimation': True,
+                        'formatter': f'{value} %',
+                        'color': 'auto'
+                    },
+                    'data': [
+                        {
+                            'value': value,
+                            'name': "Score"
+                        }
+                    ]
+                }
+            ]
+         }
+        return option
 
-    def pos_client(prediction, id):
-        fig = plt.figure()
-        ax = prediction['Prediction'].hist(grid=False)
-
-        for bar in ax.containers[0]:
-            # get x midpoint of bar
-            x = bar.get_x() + 0.5 * bar.get_width()
-
-            # set bar color based on x
-            if x < 0.4:
-                bar.set_color('red')
-            elif 0.4 <= x <= 0.6:
-                bar.set_color('yellow')
-            else:
-                bar.set_color('green')
-
-        return fig
-
-
-    fig = pos_client(predictions, df_id)
-    lim = plt.gca().get_ylim()
-    plt.vlines(df_id['Prediction'].iloc[0],
-               lim[0],
-               lim[1],
-               colors='blue',
-               label=f'Notre client \n Score : {value}')
-    plt.legend()
-
-    st.pyplot(fig)
+    st_echarts(options=set_echarts(percent), width="100%")
 
     my_min = int(min(original_test['AMT_CREDIT']))
     my_value = int(df_client['Crédit demandé'].iloc[0])
 
+    if value < 0.4:
+        st.text("Il semblerait que ce client ne soit pas à même de rembourser. Il apparaît également difficile \n"
+                "de tenter de modifier les termes de sa demande pour augmenter les chances de remboursement.")
+
+    if value > 0.6:
+        st.text("Ce client est fortement susceptible de rembourser le prêt. Nul besoin de tenter d'améliorer \n"
+                "son score qui est déjà très élevé !")
+
+    if 0.4 <= value <= 0.6:
+        st.text("Les probabilités de remboursement de la part de ce client sont modérées mais il est \n"
+                "possible de modifier certains de ses termes pour améliorer ses chances.  ")
+
 with col2:
     st.title("Vue générale")
+    st.text('Notre client')
+
+    try :
+        # Conversion pour meilleure visualisation
+        df_client["Années d'emploi"] = df_client["Années d'emploi"].astype(int)
+        df_client["Annuité"] = df_client["Annuité"].astype(int)
+        df_client["Crédit demandé"] = df_client["Crédit demandé"].astype(int)
+        df_client["Durée d\'endettement"] = df_client["Durée d\'endettement"].astype(int)
+
+    except IntCastingNaNError:
+        pass
+
+    st.dataframe(df_client.set_index('Id_client'))
+    st.text("Comparaison de notre client avec les rembourseurs et non-rembourseurs")
     neighbours = get_kneighbors(df_test=original_test, df_train=df_nn, trained_model=my_nn, cols=columns_test,
                                 ID_client=identifiant)
     list_id = list(neighbours.iloc[0])
@@ -183,7 +278,17 @@ with col2:
     df_show['Prêt remboursé'] = my_df['Prêt remboursé']
     df = df_show.copy(deep=True)
 
-    df_show['Prêt remboursé'] = df_show['Prêt remboursé'].replace((0, 1), ('Oui', 'Non'))
+    try:
+        # Conversion pour meilleure visualisation
+        df_show['Prêt remboursé'] = df_show['Prêt remboursé'].replace((0, 1), ('Oui', 'Non'))
+        df_show["Années d'emploi"] = df_show["Années d'emploi"].astype(int)
+        df_show["Annuité"] = df_show["Annuité"].astype(int)
+        df_show["Crédit demandé"] = df_show["Crédit demandé"].astype(int)
+        df_show["Durée d\'endettement"] = df_show["Durée d\'endettement"].astype(int)
+
+    except IntCastingNaNError:
+        pass
+
     my_list = ["Age", "Années d'emploi", "Ancienneté banque", "Annuité", "Crédit demandé"]
 
     df_0 = df[df['Prêt remboursé'] == 'Oui'][my_list].mean()
@@ -295,6 +400,10 @@ with col2:
     client_0 = df.iloc[0]
     client_1 = df.iloc[1]
     our_client = df.iloc[2]
+    client_0.dropna(inplace=True)
+    client_1.dropna(inplace=True)
+    our_client.dropna(inplace=True)
+
     # plotting
     fig1 = plt.figure(figsize=(6, 6))
     radar = ComplexRadar(fig1, variables, ranges)
@@ -311,85 +420,119 @@ with col2:
     st.pyplot(fig1)
 
     with st.expander("Détails"):
-        st.text('Notre client')
-        st.dataframe(df_client.set_index('Id_client'))
-        st.text("Clients similaires dans l'historique de la base de données")
+        st.text("Clients similaires dans l'historique de la base de données (50 plus proches)")
         st.dataframe(df_show.set_index('Id_client'))
 
 with st.expander("Plus d'informations"):
+    my_columns = test.drop(columns=['Id_client']).columns
+    st.text(f'Il est ici possible de visualiser la tendance globale des anciens clients ayant remboursé '
+            f'ou non selon un critère donné')
     target = 'Prêt remboursé'
-    col = st.selectbox(label="", options=test.drop(columns=['Id_client']).columns)
+    col = st.selectbox(label="", options=my_columns)
     fig = plt.figure(figsize=(10, 3))
     sns.kdeplot(train.loc[train[target] == 'Oui', col], label='oui', color='green', shade=True)
     sns.kdeplot(train.loc[train[target] == 'Non', col], label='non', color='blue', shade=True)
+
+    lim = plt.gca().get_ylim()
+    value_client = df_client[col].iloc[0]
+
+    plt.vlines(value_client,
+               lim[0],
+               lim[1],
+               colors='red',
+               label=f'Notre client : {value_client}')
+
     plt.legend(title=target)
     st.pyplot(fig)
 
+with st.expander("+"):
+    df = get_data('csv_files/d_head.csv')
+    col1, col2 = st.columns([2, 3])
+    col1.text('En réalité le dataframe utilisé pour l\'implémentation du modèle de prédiction'
+              'est plus complexe et \n ressemble à ça')
+    col1.dataframe(df)
+
+    image_name = 'notebooks/fi.jpg'
+    image = Image.open(image_name)
+
+    col2.image(image_name, caption='Importance des différentes variables dans la prédiction')
+
 with st.expander('Comment améliorer ce score ?'):
-    best_model = model#get_best_model(filename="LGBM_model.pkl")
-    col1, col2 = st.columns([6, 10])
+    best_model = model  # get_best_model(filename="models/LGBM_model.pkl")
 
-    with col1:
-        amnt_cred = st.slider(label='Diminuer le crédit demandé',
-                              min_value=my_min,
-                              max_value=my_value,
-                              value=my_value,
-                              step=10000)
+    if percent >= 60:
+        st.text('Pas de proposition ici')
 
-        max_dur = int(max(train['Durée d\'endettement']))
-        value_dur = int(df_client['Durée d\'endettement'].iloc[0])
+    else:
+        col1, col2 = st.columns([6, 10])
 
-        amt_dur = st.slider(label='Augmenter la durée d\'emprunt',
-                            min_value=value_dur,
-                            max_value=max_dur,
-                            value=value_dur,
-                            step=5)
+        with col1:
+            amnt_cred = st.slider(label='Diminuer le crédit demandé',
+                                  min_value=my_min,
+                                  max_value=my_value,
+                                  value=my_value,
+                                  step=10000)
 
-        modified_test = original_test.copy()
-        modified_train = original_train.copy()
+            max_dur = int(max(train['Durée d\'endettement']))
+            value_dur = int(df_client['Durée d\'endettement'].iloc[0])
 
-        modified_test.loc[modified_test['SK_ID_CURR'] == identifiant, 'AMT_CREDIT'] = float(amnt_cred)
+            amt_dur = st.slider(label='Augmenter la durée d\'emprunt',
+                                min_value=value_dur,
+                                max_value=max_dur,
+                                value=value_dur,
+                                step=5)
 
-        amt_dur = amnt_cred / amt_dur
-        modified_test.loc[modified_test['SK_ID_CURR'] == identifiant, 'AMT_ANNUITY'] = float(amt_dur)
+            modified_test = original_test.copy()
+            modified_train = original_train.copy()
 
-        modified_train, modified_test = functions.prepare_test(modified_train, modified_test, do_anom=True)
-        modified_train, modified_test = functions.reduced_var_imputer(modified_train, modified_test)
+            modified_test.loc[modified_test['SK_ID_CURR'] == identifiant, 'AMT_CREDIT'] = float(amnt_cred)
 
-        predictions = best_model.predict_proba(modified_test)
-        proba_remb = [i[0] for i in predictions]
+            amt_dur = amnt_cred / amt_dur
+            modified_test.loc[modified_test['SK_ID_CURR'] == identifiant, 'AMT_ANNUITY'] = float(amt_dur)
 
-        df_pred = pd.DataFrame()
-        df_pred['ID'] = original_test['SK_ID_CURR']
-        df_pred['Prediction'] = proba_remb
+            modified_train, modified_test = functions.prepare_test(modified_train, modified_test, do_anom=True)
+            modified_train, modified_test = functions.reduced_var_imputer(modified_train, modified_test)
 
-        new_proba = df_pred[df_pred['ID'] == identifiant]['Prediction'].iloc[0]
-        new_df_id = df_pred.loc[df_pred['ID'] == identifiant]
+            predictions = best_model.predict_proba(modified_test)
+            proba_remb = [i[0] for i in predictions]
 
-        new_value = np.round(new_df_id['Prediction'].iloc[0], 3)
+            df_pred = pd.DataFrame()
+            df_pred['ID'] = original_test['SK_ID_CURR']
+            df_pred['Prediction'] = proba_remb
 
-        # Make figure
-        fig = pos_client(df_pred, new_df_id)
-        lim = plt.gca().get_ylim()
-        plt.vlines(df_id['Prediction'].iloc[0],
-                   lim[0],
-                   lim[1],
-                   colors='blue',
-                   label=f'Ancien score : {value}')
+            new_proba = df_pred[df_pred['ID'] == identifiant]['Prediction'].iloc[0]
+            new_df_id = df_pred.loc[df_pred['ID'] == identifiant]
 
-        plt.vlines(new_df_id['Prediction'].iloc[0],
-                   lim[0],
-                   lim[1],
-                   colors='green',
-                   label=f'Nouveau score : {new_value}')
-        plt.legend()
-        st.pyplot(fig)
+            new_value = np.round(new_df_id['Prediction'].iloc[0], 3)
 
-        percent2 = new_value * 100
-        dif = percent2 - percent
+            # Make figure
+            # fig = pos_client(df_pred, new_df_id)
+            # lim = plt.gca().get_ylim()
+            # plt.vlines(df_id['Prediction'].iloc[0],
+            #            lim[0],
+            #            lim[1],
+            #            colors='blue',
+            #            label=f'Ancien score : {value}')
+            #
+            # plt.vlines(new_df_id['Prediction'].iloc[0],
+            #            lim[0],
+            #            lim[1],
+            #            colors='green',
+            #            label=f'Nouveau score : {new_value}')
+            # plt.legend()
+            # st.pyplot(fig)
+            percent2 = new_value * 100
+            st_echarts(options=set_echarts(percent2), width="100%")
+            dif = percent2 - percent
 
-    with col2:
-        st.text('Prédictions de remboursement')
-        st.dataframe(new_df_id)
-        st.write(f'Nouveau score : {percent2} %')
-        st.write(f'Ce choix a permis une amélioration de {np.round(dif, 1)}% !')
+        with col2:
+            st.text('Prédictions de remboursement')
+            st.dataframe(new_df_id)
+            st.write(f'Nouveau score : {percent2} %')
+
+            if dif > 0:
+                st.write(f'Ce choix a permis une amélioration de {np.round(dif, 1)}% !')
+            elif dif < 0:
+                st.write(f'Ce choix a entraîné une diminution de {abs(np.round(dif, 1))}% ...')
+            else:
+                st.write('Le score n\'a pas changé.')
