@@ -174,7 +174,7 @@ def reduced_var_imputer(X_train, X_test):
     corr_neg = list(correlations.sort_values(ascending=True).head(16).index)
     corr = corr_pos + corr_neg
 
-    df= X_train[corr]
+    df = X_train[corr]
     # create X_train, y_train
     X_train = df.drop('TARGET', axis=1)
     X_test = X_test[corr[1:]]

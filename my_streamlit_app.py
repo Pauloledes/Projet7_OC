@@ -149,23 +149,23 @@ with col1:
     st.empty()
     #
     #
-    # def pos_client(prediction, id):
-    #     fig = plt.figure()
-    #     ax = prediction['Prediction'].hist(grid=False)
-    #
-    #     for bar in ax.containers[0]:
-    #         # get x midpoint of bar
-    #         x = bar.get_x() + 0.5 * bar.get_width()
-    #
-    #         # set bar color based on x
-    #         if x < 0.4:
-    #             bar.set_color('red')
-    #         elif 0.4 <= x <= 0.6:
-    #             bar.set_color('yellow')
-    #         else:
-    #             bar.set_color('green')
-    #
-    #     return fig
+    def pos_client(prediction, id):
+        fig = plt.figure()
+        ax = prediction['Prediction'].hist(grid=False)
+
+        for bar in ax.containers[0]:
+            # get x midpoint of bar
+            x = bar.get_x() + 0.5 * bar.get_width()
+
+            # set bar color based on x
+            if x < 0.4:
+                bar.set_color('red')
+            elif 0.4 <= x <= 0.6:
+                bar.set_color('yellow')
+            else:
+                bar.set_color('green')
+
+        return fig
     #
     #
     # fig = pos_client(predictions, df_id)
@@ -458,6 +458,8 @@ with st.expander("+"):
     col2.image(image_name, caption='Importance des différentes variables dans la prédiction')
 
 with st.expander('Comment améliorer ce score ?'):
+    st.write('Bien que de faibles importances dans le modèle, la modification de ces variables peut entraîner une '
+             'amélioration')
     best_model = model  # get_best_model(filename="models/LGBM_model.pkl")
 
     if percent >= 60:
@@ -484,13 +486,12 @@ with st.expander('Comment améliorer ce score ?'):
 
             modified_test = original_test.copy()
             modified_train = original_train.copy()
-
+            # st.dataframe(modified_test)
+            modified_train, modified_test = functions.prepare_test(modified_train, modified_test, do_anom=True)
             modified_test.loc[modified_test['SK_ID_CURR'] == identifiant, 'AMT_CREDIT'] = float(amnt_cred)
 
             amt_dur = amnt_cred / amt_dur
             modified_test.loc[modified_test['SK_ID_CURR'] == identifiant, 'AMT_ANNUITY'] = float(amt_dur)
-
-            modified_train, modified_test = functions.prepare_test(modified_train, modified_test, do_anom=True)
             modified_train, modified_test = functions.reduced_var_imputer(modified_train, modified_test)
 
             predictions = best_model.predict_proba(modified_test)
@@ -506,21 +507,21 @@ with st.expander('Comment améliorer ce score ?'):
             new_value = np.round(new_df_id['Prediction'].iloc[0], 3)
 
             # Make figure
-            # fig = pos_client(df_pred, new_df_id)
-            # lim = plt.gca().get_ylim()
-            # plt.vlines(df_id['Prediction'].iloc[0],
-            #            lim[0],
-            #            lim[1],
-            #            colors='blue',
-            #            label=f'Ancien score : {value}')
-            #
-            # plt.vlines(new_df_id['Prediction'].iloc[0],
-            #            lim[0],
-            #            lim[1],
-            #            colors='green',
-            #            label=f'Nouveau score : {new_value}')
-            # plt.legend()
-            # st.pyplot(fig)
+            fig = pos_client(df_pred, new_df_id)
+            lim = plt.gca().get_ylim()
+            plt.vlines(df_id['Prediction'].iloc[0],
+                       lim[0],
+                       lim[1],
+                       colors='blue',
+                       label=f'Ancien score : {value}')
+
+            plt.vlines(new_df_id['Prediction'].iloc[0],
+                       lim[0],
+                       lim[1],
+                       colors='green',
+                       label=f'Nouveau score : {new_value}')
+            plt.legend()
+            st.pyplot(fig)
             percent2 = new_value * 100
             st_echarts(options=set_echarts(percent2), width="100%")
             dif = percent2 - percent
