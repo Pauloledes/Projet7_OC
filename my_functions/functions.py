@@ -3,19 +3,52 @@ import numpy as np
 from lime import lime_tabular
 from matplotlib import pyplot as plt
 from sklearn.impute import SimpleImputer
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, fbeta_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, fbeta_score, confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 from imblearn.under_sampling import RandomUnderSampler
 import seaborn as sns
 
 
-def get_scores(test_labels, preds):
-    print('Accuracy: %.3f' % accuracy_score(test_labels.values, preds))
-    print('Precision: %.3f' % precision_score(test_labels.values, preds))
-    print('Recall: %.3f' % recall_score(test_labels.values, preds))
-    print('F1: %.3f' % f1_score(test_labels.values, preds))
-    print('FB: %.3f' % fbeta_score(test_labels.values, preds, beta=3), '\n')
+def get_scores(true_values, pred_values):
+    """
+    Print different metric scores between predictions and expectations.
+
+    Parameters
+    ----------
+    true_values : Groundtruth
+    pred_values : Predictions
+    -------
+
+    """
+    print('Accuracy: %.3f' % accuracy_score(true_values, pred_values))
+    print('Precision: %.3f' % precision_score(true_values, pred_values))
+    print('Recall: %.3f' % recall_score(true_values, pred_values))
+    print('F1: %.3f' % f1_score(true_values, pred_values))
+    print('FB: %.3f' % fbeta_score(true_values, pred_values, beta=3), '\n')
+
+
+def my_confusion_matrix(true_values, pred_values):
+    """
+    Plot confusion matrix between predictions and expectations.
+
+    Parameters
+    ----------
+    true_values : Groundtruth
+    pred_values : Predictions
+    -------
+
+    """
+    con_mat = confusion_matrix(true_values, pred_values)
+    con_mat = pd.DataFrame(con_mat, range(2), range(2))
+
+    plt.figure(figsize=(6,6))
+    sns.heatmap(con_mat, annot=True, cbar=False, annot_kws={"size": 16}, fmt='g')
+
+    plt.ylabel('True')
+    plt.xlabel('Predicted')
+
+    plt.show()
 
 
 def under_sampling(df, target_name:str):
@@ -55,7 +88,6 @@ def label_encoder(df):
 
 
 def one_hot_encoder(df):
-    encoded_df = df.copy()
     encoded_df = pd.get_dummies(df)
 
     print('New df shape :', encoded_df.shape)
@@ -63,7 +95,20 @@ def one_hot_encoder(df):
     return encoded_df
 
 
-def missing_values(df):
+def missing_values(df: pd.DataFrame):
+    """
+    Takes a dataframe df as input and returns a dataframe where lines are features of df and columns are
+    'Number of Missing Values' & 'Percentage of Entries Missing'.
+    Parameters
+    ----------
+    df : pandas dataframe
+
+    Returns
+
+    mis_val_table_ren_columns : dataframe containing information about missing values of df.
+    -------
+
+    """
     missing_values = df.isnull().sum()
     # compute the percentage
     missing_values_percent = 100 * df.isnull().sum() / len(df)
@@ -90,6 +135,20 @@ def align_dfs(df1, df2):
 
 
 def LIME_test(model, features, target, features_names, idx):
+    """
+
+    Parameters
+    ----------
+    model : Classifier from sklearn
+    features : X
+    target : y
+    features_names : X.columns or part of
+    idx : index of row to display results
+
+    Returns
+    -------
+
+    """
     train_features, test_features, train_labels, test_labels = train_test_split(features, target, test_size=0.2,
                                                                                 random_state=42)
 
@@ -130,7 +189,20 @@ def plot_kde(df, col, target, reverse_scale=False):
     plt.close()
 
 
-def prepare_test(X_train, X_test, do_anom=False):
+def prepare_test(X_train: pd.DataFrame(), X_test: pd.DataFrame(), do_anom=False):
+    """
+    Performs label and one-hot encoding upon two datasets train and target, is also able to perform an anomaly analysis
+    (see notebook for understanding)
+    Parameters
+    ----------
+    X_train : dataframe for model training
+    X_test : dataframe for performing prediction
+    do_anom : boolean, perform anomaly analysis and modification
+
+    Returns
+    -------
+
+    """
     # Instantiate a label encoder
     label_encode = LabelEncoder()
     # Iterate over columns

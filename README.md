@@ -1,12 +1,25 @@
 # Projet7_OC
 Ce projet rassemble les travaux effecutés dans le cadre du projet n°7 
-d'Openclassrooms visant à implémenter un modèle de scoring.
+d'Openclassrooms visant à implémenter un modèle de scoring. Il est décomposé en plusieurs dossiers.
 
-Le dossier 'notebooks' contient le notebook d'analyse exploratoire
-et d'implémentation du modèle de scoring permettant de prédire
-si un client de la banque sera ou non à même de rembourser
-le prêt demandé. Ce fichier s'appuie sur des fonctions qui
-sont définies dans le fichier 'fucntions.py' du dossier 'my_functions'.
+## notebooks
 
-Un Dashboard Streamlit est disponible dans le fichier 
-'my_streamlit_app.py'. 
+Ce dossier contient le notebook d'analyse exploratoire, d'entraînement et de validation du modèle de préidcition.
+
+## API
+
+Ce répertoire contient l'api contenant les modèles et jeux de données.
+
+## models
+
+Ce dossier contient le modèle final de prédiction entraîné, au format pickle.
+
+## csv_files
+
+Contient des fichiers csv des fichiers originaux ainsi que des modifiés pour visualisation
+ou entraînement de modèle.
+
+## my_functions
+
+Contient des fonctions utiles à la fois pour le notebook, le streamlit et l'API.
+

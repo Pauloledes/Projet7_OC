@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="P7_pledes_api",
     version="0.1",
-    author="Gaetan Desrues",
+    author="Paul ledesma",
     author_email="paul.ledesma@hotmail.fr",
     description="Description",
     long_description=long_description,

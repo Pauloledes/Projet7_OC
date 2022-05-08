@@ -488,7 +488,9 @@ with st.expander('Comment améliorer ce score ?'):
             modified_train = original_train.copy()
             # st.dataframe(modified_test)
             modified_train, modified_test = functions.prepare_test(modified_train, modified_test, do_anom=True)
+            st.dataframe(modified_test.loc[modified_test['SK_ID_CURR'] == identifiant, 'AMT_CREDIT'])
             modified_test.loc[modified_test['SK_ID_CURR'] == identifiant, 'AMT_CREDIT'] = float(amnt_cred)
+            st.dataframe(modified_test.loc[modified_test['SK_ID_CURR'] == identifiant, 'AMT_CREDIT'])
 
             amt_dur = amnt_cred / amt_dur
             modified_test.loc[modified_test['SK_ID_CURR'] == identifiant, 'AMT_ANNUITY'] = float(amt_dur)
