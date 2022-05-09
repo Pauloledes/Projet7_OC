@@ -22,7 +22,6 @@ class DataCollection:
     overview_test = get_data('../csv_files/vue_generale_test.csv')
     overview_train = get_data('../csv_files/vue_generale_train.csv')
 
-
     def show_test(self):
         return self.original_test
 

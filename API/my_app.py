@@ -1,3 +1,4 @@
+import json
 import pickle
 import sys
 from data import DataCollection, get_kneighbors, train_nn
@@ -47,13 +48,13 @@ def index():
 # RAW #
 @app.get("/old_clients/raw")
 def get_train():
-    return my_data_collecton.show_train().to_html()
+    return my_data_collecton.show_train().to_json()
 
 
 # OVERVIEW #
 @app.get("/old_clients/overview")
 def get_train():
-    return my_data_collecton.show_overview_train().to_html()
+    return my_data_collecton.show_overview_train().to_json()
 
 
 ##############################################################
@@ -61,19 +62,19 @@ def get_train():
 # RAW #
 @app.get("/new_clients/raw")
 def get_test():
-    return my_data_collecton.show_test().to_html()
+    return my_data_collecton.show_test().to_json()
 
 
 # OVERVIEW #
 @app.get("/new_clients/overview")
 def get_test():
-    return my_data_collecton.show_overview_test().to_html()
+    return my_data_collecton.show_overview_test().to_json()
 
 
 # CLIENT ID #
 @app.get("/new_clients/overview/{identifiant}")
 async def overview_id(identifiant: int):
-    return my_data_collecton.show_my_client(identifiant=identifiant).to_html()
+    return my_data_collecton.show_my_client(identifiant=identifiant).to_json()
 
 
 # KNN #
@@ -126,31 +127,27 @@ async def nearest_neighbours(identifiant: int, n_neighbours=50):
     client_1.dropna(inplace=True)
     our_client.dropna(inplace=True)
 
-    my_dictionnary = {'df_show': df_show.to_html(),
-                      'variables': variables,
+    my_dictionnary = {'df_show': df_show.to_json(),
                       'ranges': ranges,
-                      'df': df.to_html(),
-                      'client_0': client_0,
-                      'client_1': client_1,
-                      'our_client': our_client}
+                      'df': df.to_json()}
 
-    return my_dictionnary
+    return pd.DataFrame.from_dict(my_dictionnary).to_json()
 
 
 ##############################################################
 # PREDICTIONS #
 @app.get("/predictions")
 def get_pred():
-    return my_data_collecton.show_pred().to_html()
+    return my_data_collecton.show_pred().to_json()
 
 
 # CLIENT ID #
 @app.get("/predictions/{identifiant}")
 async def get_predict_id(identifiant: int):
     df_id = my_data_collecton.show_my_id(identifiant)
-    value = np.round(df_id['Prediction'].iloc[0], 2)
-    percent = int(value * 100)
-    return {'df': df_id.to_html(), 'percent': percent}
+    # value = np.round(df_id['Prediction'].iloc[0], 2)
+    # percent = int(value * 100)
+    return df_id.to_json()
 
 
 # Improve score #

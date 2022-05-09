@@ -265,9 +265,9 @@ with header:
     col1, col2 = st.columns([10, 1])
 
     col1.text("Ce dashboard a pour but d'aider les chargés de relation client afin qu'ils puissent à la fois "
-              "expliquer de façon la plus transparente possible les décisions d’octroi de crédit, "
-              "mais également permettre à leurs\n"
-              "clients de disposer de leurs informations personnelles et de les explorer facilement. \n")
+              "expliquer de façon la plus transparente possible les décisions d’octroi de crédit, \n "
+              "mais également permettre à leurs clients de disposer de leurs informations personnelles "
+              "et de les explorer facilement. \n")
     col1.text("Dans le cas où la prédiction de remboursement est inférieure à 60 %, une tentative d\'amélioration \n"
               "de ce dernier est proposée.")
 
@@ -277,8 +277,8 @@ with header:
     col2.image(image_name)
 
 with st.spinner('Chargement des anciens clients'):
-    train = asyncio.run(my_new_clients(visu='overview'))
-    original_train = asyncio.run(my_old_clients(visu='raw'))
+    train = get_data('csv_files/vue_generale_train.csv')
+    original_train = get_data('csv_files/original_train.csv')
 
 
 with st.spinner('Chargement des nouveaux clients'):
@@ -458,22 +458,6 @@ with st.expander('Comment améliorer ce score ?'):
 
             new_value = np.round(new_df_id['Prediction'].iloc[0], 3)
 
-            # Make figure
-            fig = pos_client(df_pred, new_df_id)
-            lim = plt.gca().get_ylim()
-            plt.vlines(df_id['Prediction'].iloc[0],
-                       lim[0],
-                       lim[1],
-                       colors='blue',
-                       label=f'Ancien score : {value}')
-
-            plt.vlines(new_df_id['Prediction'].iloc[0],
-                       lim[0],
-                       lim[1],
-                       colors='green',
-                       label=f'Nouveau score : {new_value}')
-            plt.legend()
-            st.pyplot(fig)
             percent2 = new_value * 100
             st_echarts(options=set_echarts(percent2), width="100%")
             dif = percent2 - percent
