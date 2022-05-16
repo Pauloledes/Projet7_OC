@@ -1,7 +1,7 @@
 import json
 import pickle
 import sys
-from data import DataCollection, get_kneighbors, train_nn, get_data
+from API.data import DataCollection, get_kneighbors, train_nn, get_data
 import numpy as np
 import pandas as pd
 from fastapi import FastAPI
@@ -37,7 +37,7 @@ my_data_collecton = Datapi()
 # HOME #
 @app.get("/")
 def index():
-    f = open('welcome.txt', 'r')
+    f = open('API/welcome.txt', 'r')
     message = f.read()
     f.close()
     return message
