@@ -13,7 +13,7 @@ from PIL import Image
 from streamlit_echarts import st_echarts
 import os
 
-os.chdir('/home/pledes/Bureau/P7/')
+# os.chdir('/home/pledes/Bureau/P7/')
 warnings.filterwarnings("ignore")
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
