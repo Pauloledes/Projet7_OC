@@ -15,7 +15,6 @@ import os
 
 os.chdir('/home/pledes/Bureau/P7/')
 warnings.filterwarnings("ignore")
-
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
 
