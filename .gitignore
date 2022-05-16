@@ -13,7 +13,6 @@ Projet+Mise+en+prod+-+home-credit-default-risk
 models/LGBM_model_old.pkl
 venv
 app.py
-logo.png
 my_functions/__pycache__/functions.cpython-38.pyc
 notebooks/__pycache__/
 notebooks/Projet_7-Brouillon.ipynb

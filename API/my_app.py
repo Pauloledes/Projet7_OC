@@ -46,9 +46,9 @@ def index():
 ##############################################################
 # OLD CLIENTS #
 # RAW #
-@app.get("/old_clients/raw")
-def get_train():
-    return my_data_collecton.show_train().to_json()
+# @app.get("/old_clients/raw")
+# def get_train():
+#     return my_data_collecton.show_train().to_json()
 
 
 # OVERVIEW #
