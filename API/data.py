@@ -1,6 +1,9 @@
 import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
+import os
+
+os.chdir('/home/pledes/Bureau/P7/API/')
 
 
 def get_data(filename):
@@ -17,7 +20,7 @@ def get_data(filename):
 
 class DataCollection:
     original_test = get_data('../csv_files/original_test.csv')
-    # original_train = get_data('../csv_files/original_train.csv')
+    original_train = get_data('../csv_files/light_original_train.csv')
     predictions = get_data('../csv_files/submission.csv')
     overview_test = get_data('../csv_files/vue_generale_test.csv')
     overview_train = get_data('../csv_files/vue_generale_train.csv')
@@ -25,8 +28,8 @@ class DataCollection:
     def show_test(self):
         return self.original_test
 
-    # def show_train(self, ):
-    #     return self.original_train
+    def show_train(self, ):
+        return self.original_train
 
     def show_overview_test(self):
         return self.overview_test
@@ -42,7 +45,7 @@ def train_nn(df_train, cols, n_neighbors=4):
     # Collecting data
     df_nn = df_train[cols]
     # Collecting target
-    df_nn['TARGET'] = df_train['TARGET']
+    df_nn.loc['TARGET'] = df_train['TARGET']
     # Get rid of NAN
     df_nn.dropna(subset=cols, inplace=True)
 
