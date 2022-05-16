@@ -1,19 +1,14 @@
 import asyncio
 import json
 import pickle
-
 import aiohttp
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
-import altair
 import streamlit as st
 import pandas as pd
 from pandas.errors import IntCastingNaNError
-from sklearn.neighbors import NearestNeighbors
-from sklearn.preprocessing import StandardScaler
 import warnings
-from my_functions import functions
 from PIL import Image
 from streamlit_echarts import st_echarts
 import os
