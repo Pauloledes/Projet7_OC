@@ -3,7 +3,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
 import os
 
-os.chdir('/home/pledes/Bureau/P7/API/')
+# os.chdir('/home/pledes/Bureau/P7/API/')
 
 
 def get_data(filename):
@@ -19,11 +19,11 @@ def get_data(filename):
 
 
 class DataCollection:
-    original_test = get_data('../csv_files/original_test.csv')
-    original_train = get_data('../csv_files/light_original_train.csv')
-    predictions = get_data('../csv_files/submission.csv')
-    overview_test = get_data('../csv_files/vue_generale_test.csv')
-    overview_train = get_data('../csv_files/vue_generale_train.csv')
+    original_test = get_data('csv_files/original_test.csv')
+    original_train = get_data('csv_files/light_original_train.csv')
+    predictions = get_data('csv_files/submission.csv')
+    overview_test = get_data('csv_files/vue_generale_test.csv')
+    overview_train = get_data('csv_files/vue_generale_train.csv')
 
     def show_test(self):
         return self.original_test

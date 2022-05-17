@@ -1,0 +1,1 @@
+web: uvicorn API.my_app.py
