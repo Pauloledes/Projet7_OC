@@ -12,7 +12,7 @@ import warnings
 from PIL import Image
 from streamlit_echarts import st_echarts
 import os
-
+from my_functions import functions
 # os.chdir('/home/pledes/Bureau/P7/')
 warnings.filterwarnings("ignore")
 st.set_option('deprecation.showPyplotGlobalUse', False)
@@ -186,9 +186,13 @@ def set_echarts(value):
     return option
 
 
+# website = 'http://localhost:8000'
+website = 'https://sleepy-beyond-12325.herokuapp.com'
+
+
 async def my_new_clients(visu):
     async with aiohttp.ClientSession() as session:
-        async with session.get(f'http://localhost:8000/new_clients/{visu}') as resp:
+        async with session.get(f'{website}/new_clients/{visu}') as resp:
             text = await resp.json()
             final_df = pd.DataFrame.from_dict(json.loads(text))
             return final_df
@@ -196,7 +200,7 @@ async def my_new_clients(visu):
 
 async def my_old_clients(visu):
     async with aiohttp.ClientSession() as session:
-        async with session.get(f'http://localhost:8000/old_clients/{visu}') as resp:
+        async with session.get(f'{website}/old_clients/{visu}') as resp:
             text = await resp.json()
             final_df = pd.DataFrame.from_dict(json.loads(text))
             return final_df
@@ -204,7 +208,7 @@ async def my_old_clients(visu):
 
 async def my_df_client(id_client):
     async with aiohttp.ClientSession() as session:
-        async with session.get(f'http://localhost:8000/new_clients/overview/{id_client}') as resp:
+        async with session.get(f'{website}/new_clients/overview/{id_client}') as resp:
             text = await resp.json()
             final_df = pd.DataFrame.from_dict(json.loads(text))
             return final_df
@@ -212,7 +216,7 @@ async def my_df_client(id_client):
 
 async def my_predictions(id_client):
     async with aiohttp.ClientSession() as session:
-        async with session.get(f'http://localhost:8000/predictions/{id_client}') as resp:
+        async with session.get(f'{website}/predictions/{id_client}') as resp:
             text = await resp.json()
             final_df = pd.DataFrame.from_dict(json.loads(text))
             return final_df
@@ -220,7 +224,7 @@ async def my_predictions(id_client):
 
 async def n_neighbours_client(id_client):
     async with aiohttp.ClientSession() as session:
-        async with session.get(f'http://localhost:8000/new_clients/overview/{id_client}/nn') as resp:
+        async with session.get(f'{website}/new_clients/overview/{id_client}/nn') as resp:
             text1 = await resp.json()
             final = json.loads(text1)
             return final
@@ -263,8 +267,7 @@ with header:
               "mais également permettre à leurs clients de disposer de leurs informations personnelles "
               "et de les explorer facilement. \n")
     col1.text("Dans le cas où la prédiction de remboursement est inférieure à 60 %, une tentative d\'amélioration \n"
-              "de ce dernier est proposée.")
-
+              "de cette dernière est proposée.")
     image_name = 'logo.png'
     image = Image.open(image_name)
 
@@ -272,7 +275,7 @@ with header:
 
 with st.spinner('Chargement des anciens clients'):
     train = get_data('csv_files/vue_generale_train.csv')
-    # original_train = get_data('csv_files/original_train.csv')
+    original_train = get_data('csv_files/light_original_train.csv')
 
 
 with st.spinner('Chargement des nouveaux clients'):
@@ -402,68 +405,65 @@ with st.expander("+"):
 
     col2.image(image_name, caption='Importance des différentes variables dans la prédiction')
 
-# with st.expander('Comment améliorer ce score ?'):
-#     if percent >= 60:
-#         st.text('Pas de proposition ici')
-#
-#     else:
-#         st.write('Bien que de faibles importances dans le modèle, la modification de ces variables peut entraîner une '
-#                  'amélioration')
-#         best_model = get_best_model(filename="models/LGBM_model.pkl")
-#         col1, col2 = st.columns([6, 10])
-#
-#         with col1:
-#             amnt_cred = st.slider(label='Diminuer le crédit demandé',
-#                                   min_value=my_min,
-#                                   max_value=my_value,
-#                                   value=my_value,
-#                                   step=10000)
-#
-#             max_dur = int(max(train['Durée d\'endettement']))
-#             value_dur = int(df_client['Durée d\'endettement'].iloc[0])
-#
-#             amt_dur = st.slider(label='Augmenter la durée d\'emprunt',
-#                                 min_value=value_dur,
-#                                 max_value=max_dur,
-#                                 value=value_dur,
-#                                 step=5)
-#
-#             modified_test = original_test.copy()
-#             modified_train = original_train.copy()
-#             # st.dataframe(modified_test)
-#             modified_train, modified_test = functions.prepare_test(modified_train, modified_test, do_anom=True)
-#             st.dataframe(modified_test.loc[modified_test['SK_ID_CURR'] == identifiant, 'AMT_CREDIT'])
-#             modified_test.loc[modified_test['SK_ID_CURR'] == identifiant, 'AMT_CREDIT'] = float(amnt_cred)
-#             st.dataframe(modified_test.loc[modified_test['SK_ID_CURR'] == identifiant, 'AMT_CREDIT'])
-#
-#             amt_dur = amnt_cred / amt_dur
-#             modified_test.loc[modified_test['SK_ID_CURR'] == identifiant, 'AMT_ANNUITY'] = float(amt_dur)
-#             modified_train, modified_test = functions.reduced_var_imputer(modified_train, modified_test)
-#
-#             predictions = best_model.predict_proba(modified_test)
-#             proba_remb = [i[0] for i in predictions]
-#
-#             df_pred = pd.DataFrame()
-#             df_pred['ID'] = original_test['SK_ID_CURR']
-#             df_pred['Prediction'] = proba_remb
-#
-#             new_proba = df_pred[df_pred['ID'] == identifiant]['Prediction'].iloc[0]
-#             new_df_id = df_pred.loc[df_pred['ID'] == identifiant]
-#
-#             new_value = np.round(new_df_id['Prediction'].iloc[0], 3)
-#
-#             percent2 = new_value * 100
-#             st_echarts(options=set_echarts(percent2), width="100%")
-#             dif = percent2 - percent
-#
-#         with col2:
-#             st.text('Prédictions de remboursement')
-#             st.dataframe(new_df_id)
-#             st.write(f'Nouveau score : {percent2} %')
-#
-#             if dif > 0:
-#                 st.write(f'Ce choix a permis une amélioration de {np.round(dif, 1)}% !')
-#             elif dif < 0:
-#                 st.write(f'Ce choix a entraîné une diminution de {abs(np.round(dif, 1))}% ...')
-#             else:
-#                 st.write('Le score n\'a pas changé.')
+with st.expander('Comment améliorer ce score ?'):
+    if percent >= 60:
+        st.text('Pas de proposition ici')
+
+    else:
+        st.write('Bien que de faibles importances dans le modèle, la modification de ces variables peut entraîner une '
+                 'amélioration')
+        best_model = get_best_model(filename="models/LGBM_model.pkl")
+        col1, col2 = st.columns([6, 10])
+
+        with col1:
+            amnt_cred = st.slider(label='Diminuer le crédit demandé',
+                                  min_value=my_min,
+                                  max_value=my_value,
+                                  value=my_value,
+                                  step=10000)
+
+            max_dur = int(max(train['Durée d\'endettement']))
+            value_dur = int(df_client['Durée d\'endettement'].iloc[0])
+
+            amt_dur = st.slider(label='Augmenter la durée d\'emprunt',
+                                min_value=value_dur,
+                                max_value=max_dur,
+                                value=value_dur,
+                                step=5)
+
+            modified_test = original_test.copy()
+            modified_train = original_train.copy()
+            modified_train, modified_test = functions.prepare_test(modified_train, modified_test, do_anom=True)
+            modified_test.loc[modified_test['SK_ID_CURR'] == identifiant, 'AMT_CREDIT'] = float(amnt_cred)
+
+            amt_dur = amnt_cred / amt_dur
+            modified_test.loc[modified_test['SK_ID_CURR'] == identifiant, 'AMT_ANNUITY'] = float(amt_dur)
+            modified_train, modified_test = functions.reduced_var_imputer(modified_train, modified_test)
+
+            predictions = best_model.predict_proba(modified_test)
+            proba_remb = [i[0] for i in predictions]
+
+            df_pred = pd.DataFrame()
+            df_pred['ID'] = original_test['SK_ID_CURR']
+            df_pred['Prediction'] = proba_remb
+
+            new_proba = df_pred[df_pred['ID'] == identifiant]['Prediction'].iloc[0]
+            new_df_id = df_pred.loc[df_pred['ID'] == identifiant]
+
+            new_value = np.round(new_df_id['Prediction'].iloc[0], 3)
+
+            percent2 = new_value * 100
+            st_echarts(options=set_echarts(percent2), width="100%")
+            dif = percent2 - percent
+
+        with col2:
+            st.text('Prédictions de remboursement')
+            st.dataframe(new_df_id)
+            st.write(f'Nouveau score : {percent2} %')
+
+            if dif > 0:
+                st.write(f'Ce choix a permis une amélioration de {np.round(dif, 1)}% !')
+            elif dif < 0:
+                st.write(f'Ce choix a entraîné une diminution de {abs(np.round(dif, 1))}% ...')
+            else:
+                st.write('Le score n\'a pas changé.')
