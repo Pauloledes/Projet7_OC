@@ -37,9 +37,8 @@ my_data_collecton = Datapi()
 # HOME #
 @app.get("/")
 def index():
-    f = open('API/welcome.txt', 'r')
-    message = f.read()
-    f.close()
+    message = 'Welcome to my personal API which allows to read the client databases as well ' \
+              'as manipulate prediction models for refundings. Have fun !'
     return message
 
 
