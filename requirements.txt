@@ -3,6 +3,7 @@ fastapi
 imbalanced_learn
 imblearn
 lime
+lightgbm
 matplotlib
 numpy
 pandas
