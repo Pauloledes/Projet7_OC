@@ -12,6 +12,7 @@ import warnings
 from PIL import Image
 from streamlit_echarts import st_echarts
 import os
+import requests
 from my_functions import functions
 # os.chdir('/home/pledes/Bureau/P7/')
 warnings.filterwarnings("ignore")
@@ -223,11 +224,21 @@ async def my_predictions(id_client):
 
 
 async def n_neighbours_client(id_client):
+    my_headers = {
+        'content-type': 'application/json'
+    }
     async with aiohttp.ClientSession() as session:
-        async with session.get(f'{website}/new_clients/overview/{id_client}/nn') as resp:
+        async with session.get(f'{website}/new_clients/overview/{id_client}/nn', headers=my_headers) as resp:
+            print(resp)
             text1 = await resp.json()
+
             final = json.loads(text1)
             return final
+# def n_neighbours_client(id_client):
+#     my_url = f'{website}/new_clients/overview/{id_client}/nn'
+#     my_result = requests.get(my_url)
+#
+#     return json.loads(my_result.json())
 
 
 @st.cache(allow_output_mutation=True)

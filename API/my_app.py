@@ -82,9 +82,9 @@ async def nearest_neighbours(identifiant: int):
     n_neighbours = 50
     columns_test = ['SK_ID_CURR', 'DAYS_BIRTH', 'DAYS_EMPLOYED', 'DAYS_REGISTRATION', 'AMT_ANNUITY', 'AMT_CREDIT']
 
-    my_nn = get_best_model('../models/nn_model.pkl')
-    std = get_best_model('../models/standard_scaler.pkl')
-    df_nn = get_data('../csv_files/df_nn_light_original_train.csv')
+    my_nn = get_best_model('models/nn_model.pkl')
+    std = get_best_model('models/standard_scaler.pkl')
+    df_nn = get_data('csv_files/df_nn_light_original_train.csv')
 
     neighbours = get_kneighbors(df_test=my_data_collecton.original_test,
                                 df_train=df_nn,

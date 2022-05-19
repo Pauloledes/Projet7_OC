@@ -18,12 +18,24 @@ def get_data(filename):
     return data
 
 
+offline = True
+csv_string = 'csv_files'
+
+if offline:
+    csv_string = '../' + csv_string
+
+
 class DataCollection:
-    original_test = get_data('csv_files/original_test.csv')
-    original_train = get_data('csv_files/light_original_train.csv')
-    predictions = get_data('csv_files/submission.csv')
-    overview_test = get_data('csv_files/vue_generale_test.csv')
-    overview_train = get_data('csv_files/vue_generale_train.csv')
+    # original_test = get_data('csv_files/original_test.csv')
+    # original_train = get_data('csv_files/light_original_train.csv')
+    # predictions = get_data('csv_files/submission.csv')
+    # overview_test = get_data('csv_files/vue_generale_test.csv')
+    # overview_train = get_data('csv_files/vue_generale_train.csv')
+    original_test = get_data(f'{csv_string}/original_test.csv')
+    original_train = get_data(f'{csv_string}/light_original_train.csv')
+    predictions = get_data(f'{csv_string}/submission.csv')
+    overview_test = get_data(f'{csv_string}/vue_generale_test.csv')
+    overview_train = get_data(f'{csv_string}/vue_generale_train.csv')
 
     def show_test(self):
         return self.original_test
