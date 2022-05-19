@@ -223,22 +223,23 @@ async def my_predictions(id_client):
             return final_df
 
 
-async def n_neighbours_client(id_client):
-    my_headers = {
-        'content-type': 'application/json'
-    }
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f'{website}/new_clients/overview/{id_client}/nn', headers=my_headers) as resp:
-            print(resp)
-            text1 = await resp.json()
-
-            final = json.loads(text1)
-            return final
-# def n_neighbours_client(id_client):
-#     my_url = f'{website}/new_clients/overview/{id_client}/nn'
-#     my_result = requests.get(my_url)
+# async def n_neighbours_client(id_client):
+#     my_headers = {
+#         'content-type': 'application/json'
+#     }
+#     async with aiohttp.ClientSession() as session:
+#         async with session.get(f'{website}/new_clients/overview/{id_client}/nn', headers=my_headers) as resp:
+#             text1 = await resp.json()
 #
-#     return json.loads(my_result.json())
+#             final = json.loads(text1)
+#             return final
+
+
+def n_neighbours_client(id_client):
+    my_url = f'{website}/new_clients/overview/{id_client}/nn'
+    my_result = requests.get(my_url)
+
+    return my_result.json()
 
 
 @st.cache(allow_output_mutation=True)
@@ -353,9 +354,9 @@ with col2:
     st.dataframe(df_client.set_index('Id_client'))
     st.text("Comparaison de notre client avec les rembourseurs et non-rembourseurs")
 
-    all_infos = asyncio.run(n_neighbours_client(identifiant))
-    df = pd.DataFrame.from_dict(json.loads(all_infos['df']['0']))
-    df_show = pd.DataFrame.from_dict(json.loads(all_infos['df_show']['0']))
+    all_infos = n_neighbours_client(identifiant)
+    df = pd.DataFrame.from_dict(json.loads(all_infos['df']))
+    df_show = pd.DataFrame.from_dict(json.loads(all_infos['df_show']))
 
     client_0 = df.iloc[0]
     client_1 = df.iloc[1]
@@ -365,7 +366,7 @@ with col2:
 
     # plotting
     fig1 = plt.figure(figsize=(6, 6))
-    radar = ComplexRadar(fig1, variables, list(ranges.values()))
+    radar = ComplexRadar(fig1, variables, ranges)
     radar.plot(our_client, label=f'Notre client')
     radar.fill(our_client, alpha=0.2)
 
