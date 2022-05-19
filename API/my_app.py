@@ -7,7 +7,8 @@ import pandas as pd
 from fastapi import FastAPI
 import uvicorn
 from pandas.errors import IntCastingNaNError
-
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 sys.path.append('../')
 from my_functions import functions
 
@@ -138,9 +139,10 @@ async def nearest_neighbours(identifiant: int):
     with open('mods.txt', 'wb') as f:
         f.write(my_dictionnary)
 
-
-    return pd.DataFrame.from_dict(my_dictionnary).to_json()
+    return JSONResponse(jsonable_encoder(my_dictionnary))
+    # return pd.DataFrame.from_dict(my_dictionnary).to_json()
     # return json.dumps(my_dictionnary)
+
 
 ##############################################################
 # PREDICTIONS #
