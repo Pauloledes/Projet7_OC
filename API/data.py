@@ -18,7 +18,7 @@ def get_data(filename):
     return data
 
 
-offline = True
+offline = False
 csv_string = 'csv_files'
 
 if offline:
