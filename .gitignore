@@ -1,7 +1,7 @@
 client
 csv_files/original_train.csv
 csv_files/random_forest*
-notebooks/fi*
+notebooks/fi.png
 notebooks/LIME*
 notebooks/P7_PLE.ipynb
 notebooks/notebook-home-credit-default-risk.ipynb

@@ -137,9 +137,7 @@ async def nearest_neighbours(identifiant: int):
                       'df': df.to_json()}
 
     return my_dictionnary
-    # return JSONResponse(jsonable_encoder(my_dictionnary))
-    # return pd.DataFrame.from_dict(my_dictionnary).to_json()
-    # return json.dumps(my_dictionnary)
+
 
 
 ##############################################################
