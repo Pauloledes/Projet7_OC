@@ -136,10 +136,8 @@ async def nearest_neighbours(identifiant: int):
                       'ranges': ranges,
                       'df': df.to_json()}
 
-    with open('mods.txt', 'wb') as f:
-        f.write(my_dictionnary)
-
-    return JSONResponse(jsonable_encoder(my_dictionnary))
+    return my_dictionnary
+    # return JSONResponse(jsonable_encoder(my_dictionnary))
     # return pd.DataFrame.from_dict(my_dictionnary).to_json()
     # return json.dumps(my_dictionnary)
 
