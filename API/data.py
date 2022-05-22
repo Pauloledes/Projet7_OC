@@ -79,7 +79,7 @@ def get_kneighbors(df_test, df_train, trained_model, cols, ID_client, standard, 
     # Collecting index of requested ID_client
     my_index = df_test[cols][df_test[cols]['SK_ID_CURR'] == ID_client].index[0]
 
-    # Standaridation of data to predict
+    # Standardisation of data to predict
     client_list = standard.transform(df_test[cols])
 
     # Prediction
