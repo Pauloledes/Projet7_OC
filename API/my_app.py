@@ -81,7 +81,7 @@ async def overview_id(identifiant: int):
 @app.get("/new_clients/overview/{identifiant}/nn")
 async def nearest_neighbours(identifiant: int):
     n_neighbours = 100
-    columns_test = ['SK_ID_CURR', 'DAYS_BIRTH', 'DAYS_EMPLOYED', 'DAYS_REGISTRATION', 'AMT_ANNUITY', 'AMT_CREDIT']
+    columns_test = ['SK_ID_CURR', 'DAYS_BIRTH', 'DAYS_EMPLOYED', 'DAYS_REGISTRATION', 'AMT_CREDIT']
 
     my_nn = get_best_model('models/nn_model.pkl')
     std = get_best_model('models/standard_scaler.pkl')
@@ -119,6 +119,9 @@ async def nearest_neighbours(identifiant: int):
     ranges = [(min(df[i]), max(df[i])) for i in my_list]
 
     df_radar = my_data_collecton.show_my_client(identifiant).drop(columns=['Id_client', 'Durée d\'endettement']).mean()
+
+    if np.isnan(df_radar['Annuité']):
+        df_radar['Annuité'] = df_show['Annuité'].mean()
 
     df_all = pd.concat([df_0, df_1], axis=1)
     df_all = pd.concat([df_all, df_radar], axis=1, ignore_index=True)
