@@ -80,7 +80,7 @@ async def overview_id(identifiant: int):
 # KNN #
 @app.get("/new_clients/overview/{identifiant}/nn")
 async def nearest_neighbours(identifiant: int):
-    n_neighbours = 50
+    n_neighbours = 100
     columns_test = ['SK_ID_CURR', 'DAYS_BIRTH', 'DAYS_EMPLOYED', 'DAYS_REGISTRATION', 'AMT_ANNUITY', 'AMT_CREDIT']
 
     my_nn = get_best_model('models/nn_model.pkl')
@@ -123,15 +123,6 @@ async def nearest_neighbours(identifiant: int):
     df_all = pd.concat([df_0, df_1], axis=1)
     df_all = pd.concat([df_all, df_radar], axis=1, ignore_index=True)
     df = df_all.T
-
-    variables = tuple(df.columns)
-    client_0 = df.iloc[0]
-    client_1 = df.iloc[1]
-    our_client = df.iloc[2]
-    client_0.dropna(inplace=True)
-    client_1.dropna(inplace=True)
-    our_client.dropna(inplace=True)
-
     my_dictionnary = {'df_show': df_show.to_json(),
                       'ranges': ranges,
                       'df': df.to_json()}
