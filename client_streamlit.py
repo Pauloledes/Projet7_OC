@@ -345,7 +345,7 @@ with col2:
     try:
         # Conversion pour meilleure visualisation
         df_client["Années d'emploi"] = df_client["Années d'emploi"].astype(int)
-        df_client["Annuité"] = df_client["Annuité"].astype(int)
+        #df_client["Annuité"] = df_client["Annuité"].astype(int)
         df_client["Crédit demandé"] = df_client["Crédit demandé"].astype(int)
         df_client["Durée d\'endettement"] = df_client["Durée d\'endettement"].astype(int)
 
