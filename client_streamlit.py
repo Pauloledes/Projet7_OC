@@ -347,7 +347,7 @@ with col2:
         df_client["Années d'emploi"] = df_client["Années d'emploi"].astype(int)
         #df_client["Annuité"] = df_client["Annuité"].astype(int)
         df_client["Crédit demandé"] = df_client["Crédit demandé"].astype(int)
-        df_client["Durée d\'endettement"] = df_client["Durée d\'endettement"].astype(int)
+        #df_client["Durée d\'endettement"] = df_client["Durée d\'endettement"].astype(int)
 
     except IntCastingNaNError:
         pass
@@ -356,7 +356,6 @@ with col2:
     st.text("Comparaison de notre client avec les rembourseurs et non-rembourseurs")
 
     all_infos = n_neighbours_client(identifiant)
-    st.write(all_infos)
     df = pd.DataFrame.from_dict(json.loads(all_infos['df']))
     df_show = pd.DataFrame.from_dict(json.loads(all_infos['df_show']))
 
@@ -364,7 +363,6 @@ with col2:
     client_1 = df.iloc[1]
     our_client = df.iloc[2]
     ranges = all_infos['ranges']
-    st.write(ranges)
     variables = ("Age", "Années d'emploi", "Ancienneté banque", "Annuité", "Crédit demandé")
 
     # plotting
@@ -373,8 +371,6 @@ with col2:
     radar.plot(our_client, label=f'Notre client')
     radar.fill(our_client, alpha=0.2)
     st.dataframe(df)
-    st.write(client_0)
-    st.write(our_client)
     radar.plot(client_0, label='Moyenne des clients similaires ayant remboursé', color='g')
     radar.plot(client_1,
                label='Moyenne des clients similaires n\'ayant pas remboursé',
